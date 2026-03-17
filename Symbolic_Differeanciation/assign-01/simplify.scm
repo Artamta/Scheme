@@ -55,9 +55,6 @@
     ((and (num? b) (= b 1))   a)
     ((and (num? a) (= a -1))  (sneg b))
     ((and (num? b) (= b -1))  (sneg a))
-    ;; n * (n2 * u) -> (n*n2) * u   e.g. (* 3 (* 2 x)) -> (* 6 x)
-    ((and (num? a) (pair? b) (eq? (car b) '*) (num? (cadr b)))
-     (s* (* a (cadr b)) (caddr b)))
     ;; always write number first:  x*3 -> 3*x
     ((and (num? b) (not (num? a)))  (list '* b a))
     (else (list '* a b))))

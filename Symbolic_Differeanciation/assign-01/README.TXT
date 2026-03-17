@@ -1,11 +1,10 @@
-README.TXT
-Assignment I - Symbolic Differentiation
 
-------------------
-Name : Ayush Raj
-Roll No : 20221068
---------------------
-Computational thinking for science:
+                                            Assignment I - Symbolic differentiation
+-----------
+Ayush Raj
+20221068
+----------
+CTfS
 
 Files
 ------
@@ -24,6 +23,44 @@ How to run
 
 To run tests:
   $ guile -l deriv.scm -l tests.scm
+
+Sample interactions
+--------------------
+  (deriv '(** x 4) 'x)
+  => (* 4 (** x 3))
+
+  (deriv '(+ (* 3 (** x 2)) (* 2 x)) 'x)
+  => (+ (* 6 x) 2)
+
+  (deriv '(sin (* 2 x)) 'x)
+  => (* 2 (cos (* 2 x)))
+
+  (deriv '(cos (** x 2)) 'x)
+  => (* (* 2 x) (- (sin (** x 2))))
+
+  (deriv '(exp (* 3 x)) 'x)
+  => (* 3 (exp (* 3 x)))
+
+  (deriv '(log x) 'x)
+  => (/ 1 x)
+
+  (deriv '(log (** x 2)) 'x)
+  => (/ 2 x)
+
+  (deriv '(/ (sin x) x) 'x)
+  => (/ (- (* x (cos x)) (sin x)) (** x 2))
+
+  (deriv '(sqrt x) 'x)
+  => (/ 1 (* 2 (sqrt x)))
+
+  (deriv '(sin (exp x)) 'x)
+  => (* (cos (exp x)) (exp x))
+
+  (deriv2 '(sin x) 'x)
+  => (- (sin x))
+
+  (show '(** x 3) 'x)
+  d/dx (** x 3)  =  (* 3 (** x 2))
 
 Approach
 ---------
@@ -69,7 +106,6 @@ automatically gives the right answer without any special casing.
 Critique
 ---------
 What works well:
-- code is Modular
 - Very easy to extend. One put-rule! call adds a new function.
 - Simplifier runs automatically through the constructors so you
   never see (+ 0 x) or (* 1 x) in the output.

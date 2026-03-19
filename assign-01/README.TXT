@@ -81,6 +81,7 @@ Limitations:
   reduce. Running (simplify (simplify e)) fixes most cases.
 - No common factor cancellation in general - only the two specific
   patterns needed for log derivatives.
+
 - Output ordering may differ from what you would write by hand,
   e.g. (* (cos x) x) instead of (* x (cos x)), though both are
   mathematically the same.

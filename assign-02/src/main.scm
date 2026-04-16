@@ -1,30 +1,28 @@
-;;this file is the main file
-
-;;Importing modeules
 (load "../../assign-01/simplify.scm")
 (load "../../assign-01/deriv.scm")
 (load "model_defination.scm")
 (load "model_physis.scm")
 
+;; Step 6: The Simulation Loop
+(define (run-simulation steps dt current-pos previous-pos)
+  (if (<= steps 0)
+      (display "--- Simulation Complete ---\n")
+      (let* ((force (total-force-on-i current-pos (list current-pos 0.0))) ;; Simplified for 1D test
+             (accel (calculate-acceleration force 1.0))
+             (next-p (next-position current-pos previous-pos accel dt)))
+        
+        (display "Step: ") (display steps)
+        (display " | Position: ") (display current-pos)
+        (display " | Force: ") (display force) (newline)
+        
+        ;; Repeat for next time step
+        (run-simulation (- steps 1) dt next-p current-pos))))
 
-(newline)
-(display "--- Lennard-Jones Force Test ---")
-(newline)
-(display "Distance (r): 1.122") (newline)
-(display "Force: ")
-(display (calculate-force 0.0003 epsilon sigma))
-(newline)
-(display "--------------------------------")
-(newline)
-(display "Distance (r): 1.122") (newline)
-(display "Force: ")
-(display (calculate-force 1.122 epsilon sigma)) ;; This will be near 0
-(newline)
+;; --- Run the Test Case ---
+(display "--- Starting MD Simulation ---") (newline)
+;; Start Atom A at 1.1, moving slightly from 1.11
+(run-simulation 10 0.01 1.1 1.11) 
 
-(display "Distance (r): 0.95") (newline)
-(display "Force: ")
-(display (calculate-force 0.95 epsilon sigma))  ;; This will be a large positive number
-(newline)
-(newline)
-(newline)
-(newline)
+;; REMOVE THE ,q FROM HERE OR IT WILL ERROR
+
+(exit)

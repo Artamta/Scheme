@@ -1,8 +1,7 @@
-;; No parentheses around variable names!
+;; Constants
 (define epsilon 1.0)
 (define sigma 1.0)
-(define r-val 1)
-(define r 1)
 
+;; Helper for the Symbolic layer to wrap an expression in a negative sign
 (define (make-neg expr)
   (list '- expr))

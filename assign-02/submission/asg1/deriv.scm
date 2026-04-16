@@ -7,18 +7,18 @@
 ;;;   (load "deriv.scm")
 ;;;   (deriv '(** x 3) 'x)    =>  (* 3 (** x 2))
 
-(define (load-first-existing path-list)
+(define (asg1-load-first-existing path-list)
   (if (null? path-list)
       (error "Could not find dependency" 'simplify.scm)
       (catch #t
         (lambda ()
           (load (car path-list)))
         (lambda args
-          (load-first-existing (cdr path-list))))))
+          (asg1-load-first-existing (cdr path-list))))))
 
-(load-first-existing '("simplify.scm"
-                       "asg1/simplify.scm"
-                       "../asg1/simplify.scm"))
+(asg1-load-first-existing '("simplify.scm"
+                            "asg1/simplify.scm"
+                            "../asg1/simplify.scm"))
 
 ;;; -------------------------------------------------------
 ;;; The dispatch table

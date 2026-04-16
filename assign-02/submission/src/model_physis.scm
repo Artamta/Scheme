@@ -1,10 +1,10 @@
 ;; Assignment II - physics layer
 
-;; Needed by eval for symbolic force expression.
+;; used by symbolic expression evaluator
 (define (** base power)
   (expt base power))
 
-;; Symbolic LJ potential and force magnitude expression.
+;; Lennard-Jones potential and symbolic force (Assignment I reused)
 (define lj-potential-expr
   '(* 4 (* epsilon
            (- (** (/ sigma r) 12)
@@ -13,10 +13,7 @@
 (define lj-force-expr
   (make-neg (simplify (deriv lj-potential-expr 'r))))
 
-;; -------------------------
-;; Vector helpers
-;; -------------------------
-
+;; vector utilities
 (define (zero-vector dim)
   (if (= dim 0)
       '()
@@ -40,10 +37,6 @@
         (zero-vector (length v))
         (vector-scale (/ 1.0 norm) v))))
 
-;; -------------------------
-;; LJ force evaluation
-;; -------------------------
-
 (define (calculate-lj-force-magnitude distance epsilon sigma)
   (if (<= distance default-min-distance)
       0.0
@@ -51,8 +44,8 @@
                ,lj-force-expr)
             (interaction-environment))))
 
+;; force on i due to j
 (define (pair-force-vector pos-i species-i pos-j species-j)
-  ;; Direction is from particle j to particle i.
   (let* ((r-ji (vector-sub pos-i pos-j))
          (distance (vector-norm r-ji)))
     (if (<= distance default-min-distance)
@@ -68,23 +61,24 @@
          (species-i (list-ref species-list index))
          (dim (length pos-i)))
     (let loop ((j 0)
-               (remaining-positions positions)
-               (remaining-species species-list)
-               (total-force (zero-vector dim)))
-      (if (null? remaining-positions)
-          total-force
-          (let ((pos-j (car remaining-positions))
-                (species-j (car remaining-species)))
+               (rest-pos positions)
+               (rest-species species-list)
+               (sum-force (zero-vector dim)))
+      (if (null? rest-pos)
+          sum-force
+          (let ((pos-j (car rest-pos))
+                (species-j (car rest-species)))
             (if (= j index)
                 (loop (+ j 1)
-                      (cdr remaining-positions)
-                      (cdr remaining-species)
-                      total-force)
+                      (cdr rest-pos)
+                      (cdr rest-species)
+                      sum-force)
                 (loop (+ j 1)
-                      (cdr remaining-positions)
-                      (cdr remaining-species)
-                      (vector-add total-force
-                                  (pair-force-vector pos-i species-i pos-j species-j)))))))))
+                      (cdr rest-pos)
+                      (cdr rest-species)
+                      (vector-add
+                       sum-force
+                       (pair-force-vector pos-i species-i pos-j species-j)))))))))
 
 (define (all-forces positions species-list)
   (let ((count (length positions)))
@@ -94,10 +88,7 @@
           (loop (+ index 1)
                 (cons (force-on-index index positions species-list) result))))))
 
-;; -------------------------
-;; Numerical dynamics (Verlet)
-;; -------------------------
-
+;; Verlet integration helpers
 (define (calculate-acceleration force-vector mass)
   (vector-scale (/ 1.0 mass) force-vector))
 
@@ -109,6 +100,3 @@
 (define (estimate-velocity r-next r-previous dt)
   (vector-scale (/ 1.0 (* 2.0 dt))
                 (vector-sub r-next r-previous)))
-
-(define (pair-count n)
-  (/ (* n (- n 1)) 2))

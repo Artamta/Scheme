@@ -1,5 +1,4 @@
-;; Assignment II main driver
-
+;; Assignment II - simple main driver
 
 (define (load-first-existing path-list)
   (if (null? path-list)
@@ -10,49 +9,37 @@
         (lambda args
           (load-first-existing (cdr path-list))))))
 
-(load-first-existing '("../../assign-01/simplify.scm"
-                       "../assign-01/simplify.scm"
-                       "assign-01/simplify.scm"))
-(load-first-existing '("../../assign-01/deriv.scm"
-                       "../assign-01/deriv.scm"
-                       "assign-01/deriv.scm"))
-(load-first-existing '("model_defination.scm" "src/model_defination.scm"))
-(load-first-existing '("model_physis.scm" "src/model_physis.scm"))
+;; local Assignment I files copied into submission/asg1
+(load-first-existing '("../asg1/simplify.scm"
+                       "asg1/simplify.scm"
+                       "../../assign-01/simplify.scm"))
 
-;; -------------------------
-;; Particle representation
-;; -------------------------
+(load-first-existing '("../asg1/deriv.scm"
+                       "asg1/deriv.scm"
+                       "../../assign-01/deriv.scm"))
 
-;; Particle format:
-;; (id species mass position previous-position)
+(load-first-existing '("model_defination.scm"
+                       "src/model_defination.scm"))
+
+(load-first-existing '("model_physis.scm"
+                       "src/model_physis.scm"))
+
+;; particle layout: (id species mass position previous-position)
 (define (make-particle particle-id species position previous-position)
   (list particle-id species (mass-of species) position previous-position))
 
-(define (particle-id particle)
-  (list-ref particle 0))
+(define (particle-id p) (list-ref p 0))
+(define (particle-species p) (list-ref p 1))
+(define (particle-mass p) (list-ref p 2))
+(define (particle-position p) (list-ref p 3))
+(define (particle-previous-position p) (list-ref p 4))
 
-(define (particle-species particle)
-  (list-ref particle 1))
-
-(define (particle-mass particle)
-  (list-ref particle 2))
-
-(define (particle-position particle)
-  (list-ref particle 3))
-
-(define (particle-previous-position particle)
-  (list-ref particle 4))
-
-(define (particle-with-next-position particle next-position)
-  (list (particle-id particle)
-        (particle-species particle)
-        (particle-mass particle)
+(define (particle-with-next-position p next-position)
+  (list (particle-id p)
+        (particle-species p)
+        (particle-mass p)
         next-position
-        (particle-position particle)))
-
-;; -------------------------
-;; Validation helpers
-;; -------------------------
+        (particle-position p)))
 
 (define (all-true predicate values)
   (if (null? values)
@@ -72,15 +59,9 @@
       #t)
   #t)
 
-;; -------------------------
-;; Simulation step
-;; -------------------------
-
-;; Row format for logs and CSV:
-;; (step particle-id species position velocity force acceleration)
+;; row format: (step particle species position velocity force acceleration)
 (define (simulate-step particles dt step-index)
-  (let* ((start-time (get-internal-real-time))
-         (positions (map particle-position particles))
+  (let* ((positions (map particle-position particles))
          (species-list (map particle-species particles))
          (forces (all-forces positions species-list))
          (step-results
@@ -103,28 +84,20 @@
                                    accel)))
                    (list next-particle row)))
                particles
-               forces))
-         (end-time (get-internal-real-time))
-         (elapsed-seconds (/ (- end-time start-time)
-                             internal-time-units-per-second)))
+               forces)))
     (list (map car step-results)
-          (map cadr step-results)
-          (* (length particles) (- (length particles) 1))
-          elapsed-seconds)))
+          (map cadr step-results))))
 
 (define (show-row row)
   (display "  particle=") (display (list-ref row 1))
   (display " species=") (display (list-ref row 2))
   (display " pos=") (display (list-ref row 3))
   (display " vel=") (display (list-ref row 4))
-  (display " force=") (display (list-ref row 5))
-  (display " accel=") (display (list-ref row 6))
   (newline))
 
-(define (show-step-summary step-rows directed-interactions elapsed-seconds)
+(define (show-step-summary step-rows)
   (display "Step ") (display (list-ref (car step-rows) 0))
-  (display " | directed-pair-evals=") (display directed-interactions)
-  (display " | step-time-s=") (display elapsed-seconds)
+  (display " done")
   (newline)
   (for-each show-row step-rows))
 
@@ -132,35 +105,20 @@
   (validate-particles particles dim)
   (let loop ((step 1)
              (state particles)
-             (history '())
-             (total-evaluations 0)
-             (total-seconds 0.0))
+             (history '()))
     (if (> step steps)
         (begin
           (display "Simulation complete.\n")
-          (display "Total directed pair evaluations: ")
-          (display total-evaluations)
-          (newline)
-          (display "Total physics time (s): ")
-          (display total-seconds)
-          (newline)
-          (reverse history))
+          history)
         (let* ((step-output (simulate-step state dt step))
                (next-state (list-ref step-output 0))
-               (step-rows (list-ref step-output 1))
-               (interaction-count (list-ref step-output 2))
-               (elapsed-seconds (list-ref step-output 3)))
-          (show-step-summary step-rows interaction-count elapsed-seconds)
+               (step-rows (list-ref step-output 1)))
+          (show-step-summary step-rows)
           (loop (+ step 1)
                 next-state
-                (append (reverse step-rows) history)
-                (+ total-evaluations interaction-count)
-                (+ total-seconds elapsed-seconds))))))
+                (append history step-rows))))))
 
-;; -------------------------
-;; CSV export for plotting
-;; -------------------------
-
+;; CSV helpers
 (define (to-text value)
   (cond ((string? value) value)
         ((symbol? value) (symbol->string value))
@@ -210,40 +168,31 @@
        (lambda (row)
          (display (join-with-comma (row->csv-fields row)) port)
          (newline port))
-       history)))
-  (display "Wrote CSV: ") (display file-path) (newline))
+       history))))
 
-;; -------------------------
-;; Example scenarios
-;; -------------------------
-
+;; sample systems
 (define (sample-particles-1d)
-  (list (make-particle 0 'A '(0.00) '(-0.01))
-    (make-particle 1 'B '(1.15) '(1.16))
-    (make-particle 2 'A '(2.45) '(2.44))
-    (make-particle 3 'B '(3.90) '(3.91))
-    (make-particle 4 'A '(5.35) '(5.34))))
+  (list (make-particle 0 'A '(0.0) '(-0.01))
+        (make-particle 1 'B '(1.3) '(1.31))
+        (make-particle 2 'A '(2.8) '(2.79))))
 
-;; Two-particle 1D setup where particles start far apart and move closer.
 (define (sample-particles-1d-approach)
-  (list (make-particle 0 'A '(0.20) '(0.10))
-    (make-particle 1 'B '(2.80) '(2.90))))
+  (list (make-particle 0 'A '(0.2) '(0.1))
+        (make-particle 1 'B '(2.9) '(3.0))))
 
 (define (sample-particles-2d)
-  (list (make-particle 0 'A '(0.00 0.00) '(-0.01 0.00))
-    (make-particle 1 'B '(1.20 0.25) '(1.21 0.25))
-    (make-particle 2 'A '(0.55 1.35) '(0.56 1.34))
-    (make-particle 3 'B '(2.10 0.85) '(2.11 0.86))
-    (make-particle 4 'A '(1.70 1.95) '(1.69 1.94))))
+  (list (make-particle 0 'A '(0.0 0.0) '(-0.01 0.0))
+        (make-particle 1 'B '(1.1 0.2) '(1.11 0.2))
+        (make-particle 2 'A '(0.4 1.3) '(0.41 1.29))
+        (make-particle 3 'B '(1.8 1.0) '(1.81 1.01))))
 
 (define (sample-particles-3d)
-  (list (make-particle 0 'A '(0.00 0.00 0.00) '(-0.01 0.00 0.00))
-    (make-particle 1 'B '(1.10 0.25 0.12) '(1.11 0.25 0.13))
-    (make-particle 2 'A '(0.45 1.25 0.30) '(0.46 1.24 0.30))
-    (make-particle 3 'B '(0.90 0.50 1.15) '(0.90 0.51 1.16))
-    (make-particle 4 'A '(1.95 1.40 0.80) '(1.94 1.39 0.79))
-    (make-particle 5 'B '(2.40 0.95 1.75) '(2.41 0.96 1.74))))
+  (list (make-particle 0 'A '(0.0 0.0 0.0) '(-0.01 0.0 0.0))
+        (make-particle 1 'B '(1.2 0.2 0.1) '(1.21 0.2 0.11))
+        (make-particle 2 'A '(0.5 1.1 0.4) '(0.51 1.1 0.4))
+        (make-particle 3 'B '(1.9 1.3 0.8) '(1.9 1.29 0.79))))
 
+;; user-facing wrappers
 (define (run-1d steps dt)
   (run-simulation 1 steps dt (sample-particles-1d)))
 
@@ -277,15 +226,15 @@
     history))
 
 (define (print-usage)
-  (display "Assignment II simulator loaded.\n")
-  (display "Run examples:\n")
+  (display "Submission simulator loaded.\n")
+  (display "Examples:\n")
   (display "  (run-1d default-steps default-dt)\n")
   (display "  (run-1d-approach default-steps default-dt)\n")
   (display "  (run-2d default-steps default-dt)\n")
   (display "  (run-3d default-steps default-dt)\n")
-  (display "CSV export examples:\n")
-  (display "  (run-1d-approach-to-file 60 0.01 \"one_d_particles_closer.csv\")\n")
-  (display "  (run-2d-to-file 60 0.01 \"two_species_2d.csv\")\n")
-  (display "  (run-3d-to-file 60 0.01 \"two_species_3d.csv\")\n"))
+  (display "CSV examples:\n")
+  (display "  (run-1d-approach-to-file 40 0.01 \"output/one_d_particles_closer.csv\")\n")
+  (display "  (run-2d-to-file 40 0.01 \"output/two_species_2d.csv\")\n")
+  (display "  (run-3d-to-file 40 0.01 \"output/two_species_3d.csv\")\n"))
 
 (print-usage)

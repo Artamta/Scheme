@@ -1,0 +1,43 @@
+SUBMISSION SUMMARY
+CTfS Assignment II
+
+Candidate: Ayush Raj
+Roll Number: 20221068
+
+This submission presents a molecular dynamics simulator based on the Lennard-Jones 6-12 potential, implemented in Scheme (Guile). The force expression is generated using symbolic differentiation from Assignment I and evaluated numerically in the simulation loop.
+
+Implementation scope:
+- Multi-particle simulation in 1D, 2D, and 3D.
+- Two-species support (A and B) with species-specific mass and pair-wise LJ parameters.
+- Shared physics core with dimension-specific wrappers.
+- Verlet position update and finite-difference velocity estimate.
+- CSV export for trajectory, velocity, force, and acceleration components.
+
+Validation status:
+- Dedicated test suite executed successfully.
+- Total tests: 18
+- Passed: 18
+- Failed: 0
+
+Data and visualization outputs generated:
+- output/one_d_particles_closer.csv
+- output/two_species_2d.csv
+- output/two_species_3d.csv
+- plots/one_d_particles_closer_clean.png
+- plots/one_d_particles_closer_1d_closer.png
+- plots/one_d_particles_closer_simulation.gif
+- plots/two_species_2d_clean.png
+- plots/two_species_2d_simulation.gif
+- plots/two_species_3d_clean.png
+- plots/two_species_3d_simulation.gif
+
+Notes on presentation:
+- 2D and 3D trajectory plots include gradient path styling and historical position markers.
+- A dedicated 1D plot highlights pair separation behavior over time.
+
+Commands used for verification:
+1. guile -l tests.scm
+2. CSV sanity checks (rows, dimensions, particle counts, step range) -> all checks passed.
+
+Final assessment:
+The current artifacts are consistent, reproducible, and suitable for submission.

@@ -1,14 +1,20 @@
-;;this module is used for Defining the physic of the model
-;;force accleration lj potential etc
+;; Map the symbolic ** to the actual exponentiation function
+;;(define (** base power) (expt base power))
 
-;;epsiolon used for lj-potential
-(define (epsilon ?))
+(define (** base power) (expt base power))
+(define lj-potential-expr
+  '(* 4 (* epsilon (- (** (/ sigma r) 12) 
+                      (** (/ sigma r) 6)))))
 
-;;sigma used for lj-potential
-(define (sigma ?))
+;; Generate the symbolic expression
+(define lj-force-expr 
+  (make-neg (simplify (deriv lj-potential-expr 'r))))
 
-;;lj-potential-formula
-(define (lj-potential r)
-    (* (* 4 epsilon (expt sigma 6))(- (* (expt sigma 2) (expt (1/r) 12)) (expt 1/r 6)))
+(define (calculate-force r-val epsilon-val sigma-val)
+  (eval `(let ((r ,r-val)
+               (epsilon ,epsilon-val)
+               (sigma ,sigma-val))
+           ,lj-force-expr) 
+        (interaction-environment)))
 
 
